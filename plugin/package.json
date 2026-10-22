@@ -1,6 +1,6 @@
 {
   "name": "mathbridge-dsh-connect",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Connect DeepSeek Harness desktop to the MathBridge course mathematics tutor",
   "type": "module",
   "main": "index.mjs",

@@ -5,8 +5,8 @@ param(
   [switch]$PlanOnly
 )
 $ErrorActionPreference = 'Stop'
-$pluginVersion = '0.2.0'
-$expectedPluginHash = 'c600de51ed718f9f314ca7768dc670d2b6e1f39956405785a2f6a65781f46149'
+$pluginVersion = '0.2.1'
+$expectedPluginHash = '6f917c45c5af9e06e033f73662597742f8871319730371bcd19a7b23b05f138f'
 if (-not $DshDirectory) {
   $taskCandidates = @((Join-Path $env:LOCALAPPDATA 'Programs/DeepSeek Harness'), (Join-Path $env:USERPROFILE 'AppData/Local/Programs/DeepSeek Harness'), (Join-Path $env:ProgramFiles 'DeepSeek Harness'))
   $DshDirectory = $taskCandidates | Where-Object { Test-Path -LiteralPath (Join-Path $_ 'resources/runtime/cli/bin/dsh.cmd') -PathType Leaf } | Select-Object -First 1
@@ -33,7 +33,10 @@ $archive = Join-Path $applicationDirectory ('mathbridge-dsh-connect-' + $pluginV
 $download = $archive + '.download'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 Invoke-WebRequest -Uri ($CourseOrigin + '/connect/' + $pluginVersion + '/mathbridge-dsh-connect-' + $pluginVersion + '.tgz') -OutFile $download -MaximumRedirection 0 -UseBasicParsing -TimeoutSec 60
-if ((Get-Item -LiteralPath $download).Length -gt 2097152 -or (Get-FileHash -LiteralPath $download -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expectedPluginHash) { Remove-Item -LiteralPath $download -Force; throw 'Connector checksum verification failed. Nothing was installed.' }
+$archiveHash = [Security.Cryptography.SHA256]::Create()
+$archiveStream = [IO.File]::OpenRead($download)
+try { $actualPluginHash = ([BitConverter]::ToString($archiveHash.ComputeHash($archiveStream))).Replace('-','').ToLowerInvariant() } finally { $archiveStream.Dispose(); $archiveHash.Dispose() }
+if ((Get-Item -LiteralPath $download).Length -gt 2097152 -or $actualPluginHash -ne $expectedPluginHash) { Remove-Item -LiteralPath $download -Force; throw 'Connector checksum verification failed. Nothing was installed.' }
 Move-Item -LiteralPath $download -Destination $archive -Force
 $backupStamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 Copy-Item -LiteralPath $profileManifest -Destination (Join-Path $applicationDirectory ('profile-' + $backupStamp + '.json.bak'))
