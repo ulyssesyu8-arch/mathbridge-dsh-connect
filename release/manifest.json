@@ -1,0 +1,8 @@
+{
+  "version": "0.2.0",
+  "installer": "/connect/0.2.0/Connect-MathBridge.ps1",
+  "installerSha256": "f87539cc31b504697c8b9977afdfccf5a400ca141ff74c37af43c0a3341c88ac",
+  "skill": "/connect/0.2.0/SKILL.md",
+  "plugin": "/connect/0.2.0/mathbridge-dsh-connect-0.2.0.tgz",
+  "pluginSha256": "c600de51ed718f9f314ca7768dc670d2b6e1f39956405785a2f6a65781f46149"
+}

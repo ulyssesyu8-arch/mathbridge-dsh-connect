@@ -1,0 +1,5 @@
+- insert:
+    - id: mathbridge-connect
+      name: mathbridge-dsh-connect
+      config:
+        endpoint: http://127.0.0.1:4173/api/dsh-tutor/bridge/
