@@ -5,8 +5,8 @@ param(
   [switch]$PlanOnly
 )
 $ErrorActionPreference = 'Stop'
-$pluginVersion = '0.2.1'
-$expectedPluginHash = '6f917c45c5af9e06e033f73662597742f8871319730371bcd19a7b23b05f138f'
+$pluginVersion = '0.2.2'
+$expectedPluginHash = '2e24a2c7c2a8948b45a2188f3a0c80ffb770e568fd4ffd4bfd8d5fb2591ea0c1'
 if (-not $DshDirectory) {
   $taskCandidates = @((Join-Path $env:LOCALAPPDATA 'Programs/DeepSeek Harness'), (Join-Path $env:USERPROFILE 'AppData/Local/Programs/DeepSeek Harness'), (Join-Path $env:ProgramFiles 'DeepSeek Harness'))
   $DshDirectory = $taskCandidates | Where-Object { Test-Path -LiteralPath (Join-Path $_ 'resources/runtime/cli/bin/dsh.cmd') -PathType Leaf } | Select-Object -First 1
@@ -45,10 +45,11 @@ if (Test-Path -LiteralPath $profilePatch -PathType Leaf) { Copy-Item -LiteralPat
 & $dshCommand plugin --profile desktop add --offline --ignore-scripts $archive
 if ($LASTEXITCODE -ne 0) { throw 'DSH could not install the verified connector. Existing configuration backups were retained.' }
 $configName = 'mathbridge-dsh-connection-' + $channel
-$manifest = @{ name=$configName; version=$pluginVersion; private=$true; dsh=@{ bundle=@{ patch='./cordis.patch.yml' } } } | ConvertTo-Json -Depth 5
 $pairBytes = [Text.Encoding]::UTF8.GetBytes($PairingCode)
 $sha = [Security.Cryptography.SHA256]::Create()
 try { $nonce = ([BitConverter]::ToString($sha.ComputeHash($pairBytes))).Replace('-','').ToLowerInvariant() } finally { $sha.Dispose() }
+$connectionVersion = $pluginVersion + '-pair.p' + $nonce.Substring(0,12)
+$manifest = @{ name=$configName; version=$connectionVersion; private=$true; main='index.js'; files=@('index.js','cordis.patch.yml'); dsh=@{ bundle=@{ patch='./cordis.patch.yml' } } } | ConvertTo-Json -Depth 5
 $endpoint = $CourseOrigin + '/api/dsh-tutor/bridge/'
 $slot = if ($channel -eq 'local') { 'quick-local' } else { '' }
 $patch = @"
@@ -64,8 +65,18 @@ $patch = @"
 "@
 $utf8 = New-Object Text.UTF8Encoding($false)
 [IO.File]::WriteAllText((Join-Path $configDirectory 'package.json'), $manifest, $utf8)
+[IO.File]::WriteAllText((Join-Path $configDirectory 'index.js'), "module.exports = {};" + [Environment]::NewLine, $utf8)
 [IO.File]::WriteAllText((Join-Path $configDirectory 'cordis.patch.yml'), $patch + [Environment]::NewLine, $utf8)
-& $dshCommand plugin --profile desktop add --offline --ignore-scripts $configDirectory
+& $dshCommand plugin --profile desktop --dir $configDirectory pack --pack-destination $applicationDirectory --config.ignore-scripts=true
+if ($LASTEXITCODE -ne 0) { throw 'DSH could not package MathBridge connection settings.' }
+$connectionArchive = Join-Path $applicationDirectory ($configName + '-' + $connectionVersion + '.tgz')
+if (-not (Test-Path -LiteralPath $connectionArchive -PathType Leaf)) { throw 'The MathBridge connection archive was not created.' }
+$currentProfile = Get-Content -LiteralPath $profileManifest -Raw | ConvertFrom-Json
+if ($currentProfile.dependencies.PSObject.Properties[$configName]) {
+  & $dshCommand plugin --profile desktop remove --config.offline=true --config.ignore-scripts=true $configName
+  if ($LASTEXITCODE -ne 0) { throw 'DSH could not replace the previous MathBridge connection settings.' }
+}
+& $dshCommand plugin --profile desktop add --offline --ignore-scripts $connectionArchive
 if ($LASTEXITCODE -ne 0) { throw 'DSH could not install MathBridge connection settings. No DSH process was stopped.' }
 if ($channel -eq 'online') {
   for ($attempt = 0; $attempt -lt 10; $attempt++) {

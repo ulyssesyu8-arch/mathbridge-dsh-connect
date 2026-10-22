@@ -40,4 +40,4 @@ The connector uses the student's official DSH account route and independent Math
 
 For a newly generated pairing instruction, rerun the same verified installer with its fresh code. It replaces only MathBridge's app-owned connection settings and retains DSH records. For unsupported DSH versions, report the detected version and stop without changing the profile. For network or checksum failures, stop with a short actionable explanation; never substitute another download source.
 
-Source and installer are versioned together at `/connect/0.2.1/`. The course website's “断开 DSH 连接” revokes its bridge credential. Closing the page or uninstalling the connector does not delete DSH teaching history.
+Source and installer are versioned together at `/connect/0.2.2/`. The course website's “断开 DSH 连接” revokes its bridge credential. Closing the page or uninstalling the connector does not delete DSH teaching history.

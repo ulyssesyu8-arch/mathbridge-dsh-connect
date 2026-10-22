@@ -1,6 +1,6 @@
 # MathBridge DSH connector
 
-Desktop integration, version 0.2.1. Install this bundle in an existing DeepSeek Harness desktop profile. Reference version: DSH 0.2.1-rc.2; other versions have not been verified. The MathBridge website supplies a one-copy installation/pairing instruction and a pinned, checksum-verified Windows installer.
+Desktop integration, version 0.2.2. Install this bundle in an existing DeepSeek Harness desktop profile. Reference version: DSH 0.2.1-rc.2; other versions have not been verified. The MathBridge website supplies a one-copy installation/pairing instruction and a pinned, checksum-verified Windows installer.
 
 On Windows, the public bridge honors DSH's explicit proxy environment. When none is configured, it reads the existing Windows per-URL proxy policy and uses DSH's bundled HTTP implementation in a connection-scoped dispatcher. It does not change system proxy settings or the global DSH dispatcher. TLS checks and the fixed MathBridge destination remain enforced.
 
